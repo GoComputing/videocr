@@ -26,12 +26,34 @@ class Video:
         with Capture(path) as v:
             self.num_frames = int(v.get(cv2.CAP_PROP_FRAME_COUNT))
             self.fps = v.get(cv2.CAP_PROP_FPS)
+            self.width  = int(v.get(cv2.CAP_PROP_FRAME_WIDTH))
             self.height = int(v.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     def run_ocr(self, lang: str, time_start: str, time_end: str,
-                conf_threshold: int, use_fullframe: bool) -> None:
+                conf_threshold: int, use_fullframe: bool, use_bbox: bool,
+                x1: int, y1: int, x2: int, y2: int) -> None:
         self.lang = lang
         self.use_fullframe = use_fullframe
+        self.x1, self.y1 = x1, y1
+        self.x2, self.y2 = x2, y2
+
+        # Check the flags conflicts
+        if self.use_bbox and self.use_fullframe:
+            raise ValueError('The full frame and the use of bounding box parameters cannot work together')
+
+        # Ensure the bounding box is inside the frame
+        if self.use_bbox:
+            assert x1 >= 0 and x1 < self.width
+            assert x2 >= 0 and x2 < self.width
+            assert y1 >= 0 and y1 < self.height
+            assert y2 >= 0 and y2 < self.height
+            assert x1 < x2
+            assert y1 < y2
+        else:
+            x1 = 0
+            y1 = self.height // 2
+            x2 = self.width-1
+            y2 = self.height-1
 
         ocr_start = utils.get_frame_index(time_start, self.fps) if time_start else 0
         ocr_end = utils.get_frame_index(time_end, self.fps) if time_end else self.num_frames
@@ -55,7 +77,7 @@ class Video:
     def _image_to_data(self, img) -> str:
         if not self.use_fullframe:
             # only use bottom half of the frame by default
-            img = img[self.height // 2:, :]
+            img = img[self.y1:self.y2+1, self.x1:self.x2+1]
         config = '--tessdata-dir "{}"'.format(constants.TESSDATA_DIR)
         try:
             return pytesseract.image_to_data(img, lang=self.lang, config=config)
