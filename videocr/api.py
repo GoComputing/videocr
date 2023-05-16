@@ -4,7 +4,7 @@ from .video import Video
 
 def get_subtitles(
         video_path: str, lang='eng', time_start='0:00', time_end='',
-        conf_threshold=65, sim_threshold=90, use_fullframe=False, use_bbox=False, x1, y1, x2, y2) -> str:
+        conf_threshold=65, sim_threshold=90, use_fullframe=False, use_bbox=False, x1=-1, y1=-1, x2=-1, y2=-1) -> str:
     utils.download_lang_data(lang)
 
     v = Video(video_path)
