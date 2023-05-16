@@ -15,6 +15,11 @@ class Video:
     path: str
     lang: str
     use_fullframe: bool
+    use_bbox: bool
+    x1: int
+    y1: int
+    x2: int
+    y2: int
     num_frames: int
     fps: float
     height: int
@@ -36,7 +41,8 @@ class Video:
         self.use_fullframe = use_fullframe
         self.x1, self.y1 = x1, y1
         self.x2, self.y2 = x2, y2
-
+        self.use_bbox = use_bbox
+        
         # Check the flags conflicts
         if self.use_bbox and self.use_fullframe:
             raise ValueError('The full frame and the use of bounding box parameters cannot work together')
